@@ -52,6 +52,35 @@ func LineDiffAsLines(a, b string) []string {
 	return diffsToPatchLines(diff(a, b))
 }
 
+// LineDiffNoWhitespace returns a linewise diff between the two given strings
+// with whitespace ignored. Leading, trailing, and repeated whitespace on each
+// line does not count as a change, and an empty string is returned when the
+// inputs differ only in whitespace. When there are other differences, the diff
+// is rendered from the whitespace-normalized lines.
+func LineDiffNoWhitespace(a, b string) string {
+	return strings.Join(LineDiffAsLinesNoWhitespace(a, b), "\n")
+}
+
+// LineDiffAsLinesNoWhitespace returns the lines of a whitespace-insensitive
+// linewise diff between the two given strings.
+func LineDiffAsLinesNoWhitespace(a, b string) []string {
+	a, b = normalizeWhitespace(a), normalizeWhitespace(b)
+	if a == b {
+		return nil
+	}
+	return diffsToPatchLines(diff(a, b))
+}
+
+// normalizeWhitespace trims each line and collapses runs of whitespace within
+// a line to a single space.
+func normalizeWhitespace(s string) string {
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	for i, line := range lines {
+		lines[i] = strings.Join(strings.Fields(line), " ")
+	}
+	return strings.Join(lines, "\n")
+}
+
 type patchBuilder struct {
 	output        []string
 	oldLines      []string
